@@ -4,8 +4,6 @@ Jogo independente de navegador para PC e celular, com controles por teclado e to
 
 [Jogar Street Brasa](https://brasa-arcade.pages.dev/fighter) · [Central Brasa Arcade](https://brasa-arcade.pages.dev/)
 
-Repositório público: [tavinorama/street-brasa](https://github.com/tavinorama/street-brasa).
-
 Panorama dos dois produtos e próximas entregas: [OVERVIEW.md](OVERVIEW.md).
 
 ## Rodar
@@ -14,7 +12,11 @@ Node.js 20+: execute `npm start` e abra http://localhost:4173. Os arquivos de `d
 
 ## Cloudflare Pages gratuito
 
-Publicado em [Street Brasa](https://brasa-arcade.pages.dev/fighter). A central compartilhada está em [Brasa Arcade](https://brasa-arcade.pages.dev/). Para atualizar esta distribuição, execute `npm run check` e depois `npm run deploy` com a conta Cloudflare conectada.
+Publicado em [Street Brasa](https://brasa-arcade.pages.dev/fighter). O projeto independente Cloudflare é `tavinorama-street-brasa`.
+
+1. Execute `npx wrangler@4.151.3 login` e conclua o acesso no navegador.
+2. Execute `npx wrangler@4.151.3 pages project create tavinorama-street-brasa --production-branch main`.
+3. Execute `npm run deploy`.
 
 Alternativa: no painel Cloudflare, Workers & Pages → criar Pages → conectar este repositório GitHub → branch main → sem framework → comando de build vazio → pasta de saída `dist`. Nunca envie a pasta inteira do projeto como arquivos públicos.
 
@@ -24,6 +26,6 @@ O manifesto e o service worker permitem instalar a PWA no Android e no Safari do
 
 ## Física e arte
 
-Simulação 2D em passos de 1/60 s: gravidade, aceleração, frenagem, impulso e molas amortecidas para cabelo/tecido. As 48 poses do elenco usam recorte por silhueta, apoios dos pés e sombras de contato. Esta técnica não equivale a corpos 3D ou captura de movimento. As fotografias de seleção têm créditos em `dist/photo-credits.json`; poses de combate e cenários são reconstruções fictícias. Prompts e registros de pesquisa acompanham o projeto.
+Simulação 2D em passos de 1/60 s: gravidade, aceleração, frenagem, impulso e molas amortecidas para cabelo/tecido. As 48 poses do elenco usam recorte por silhueta, apoios dos pés e sombras de contato. Esta técnica não equivale a corpos 3D ou captura de movimento. Retratos da seleção e poses de combate compartilham as mesmas reconstruções de aparência fotográfica. As fotografias documentais do dossiê têm créditos em `dist/photo-credits.json`; poses de combate e cenários são reconstruções fictícias. Prompts e registros de pesquisa acompanham o projeto.
 
-Música instrumental com volume inicial de 10% e reprodução 25% mais rápida, com ajustes independentes para trilha e efeitos. Créditos em `dist/music-credits.html`. Paródia independente; citações reais estão separadas das falas e ações fictícias.
+Música instrumental com velocidade ajustável e efeitos procedurais. Créditos em `dist/music-credits.html`. Paródia independente; citações reais estão separadas das falas e ações fictícias.
