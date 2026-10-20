@@ -13,3 +13,9 @@ test('jump can evade low projectile; empty meter cannot launch super',()=>{const
 test('match requires two round wins and exact finisher sequence',()=>{const m=create();m.damage(1,1000,0);assert.equal(m.state,'roundover');assert.equal(m.wins[0],1);advance(m,4.7);assert.equal(m.round,2);assert.equal(m.state,'fight');m.damage(1,1000,0);assert.equal(m.state,'finish');assert.equal(m.wins[0],2);assert.equal(m.finishKey(1,'down'),false);m.finishKey(0,'down');m.finishKey(0,'fatal');assert.equal(m.sequence.length,0);for(const k of ['down','forward','down','fatal'])m.finishKey(0,k);assert.equal(m.state,'fatal');advance(m,4.5);assert.equal(m.state,'result')});
 test('expired timer resolves round and training recovers without ending',()=>{const m=create();m.timer=.01;m.fighters[1].hp=90;m.update(1/60);assert.equal(m.state,'roundover');assert.equal(m.winner,0);const t=create(roster[0],roster[1],'training');t.damage(1,1000,0);assert.equal(t.fighters[1].hp,100);assert.equal(t.state,'fight')});
 test('all specials and CPU simulation keep positions and health within bounds',()=>{for(const f of roster){const m=create(f,roster[1],'cpu');m.attack(0,'special');for(let i=0;i<1200;i++)m.update(1/60,[{right:i%100<50,jump:i%90===0},{}]);for(const p of m.fighters){assert.ok(Number.isFinite(p.x)&&Number.isFinite(p.y));assert.ok(p.hp>=0&&p.hp<=100);assert.ok(p.meter>=0&&p.meter<=100);if(!p.dead)assert.ok(p.x>=65&&p.x<=1215)}}});
+
+test('impact pause is bounded and freezes the combat clock without delaying defeated gravity',()=>{
+const m=new Match(roster[0],roster[1],'local');for(let i=0;i<130;i++)m.update(1/60);
+ m.damage(1,10,0);const timer=m.timer,x=m.fighters[1].x;m.update(.016);assert.equal(m.timer,timer);assert.equal(m.fighters[1].x,x);
+ m.damage(1,1000,0);const f=m.fighters[1];f.y=100;f.vy=0;m.update(.04);m.update(.04);assert.ok(f.y<100);assert.equal(m.hitstop,0);
+});

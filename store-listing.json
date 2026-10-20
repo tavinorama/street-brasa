@@ -1,0 +1,11 @@
+{
+  "status": "draft — owner/store review required",
+  "locale": "pt-BR",
+  "title": "Street Brasa",
+  "shortDescription": "Combate arcade brasileiro com personagens satíricos e multiplayer.",
+  "description": "Luta 1 contra 1 com 16 personagens, arenas e finalizações individuais. Controles por toque e teclado, dificuldade ajustável, salvamento local e controles separados de música e efeitos. Personagens e confrontos são paródia e ficção.",
+  "website": "https://brasa-arcade.pages.dev/fighter",
+  "privacyUrl": "https://brasa-arcade.pages.dev/privacy.html",
+  "version": "0.3.3",
+  "build": 33
+}
