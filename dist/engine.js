@@ -1,3 +1,4 @@
+import {FINISHER_DURATION,finisherBeat} from './finisher-scenes.js';
 import {createMotion,stepMotion,addInjury,approach,resolveBodies,stepVertical} from './physics.js';
 import {difficulty} from './preferences.js';
 export const FLOOR=510;
@@ -21,15 +22,16 @@ export class Match{
   f.hp=clamp(f.hp-amount,0,100);f.meter=clamp(f.meter+amount*1.1,0,100);a.meter=clamp(a.meter+amount*.9,0,100);this.effects.push({type:'hit',x:f.x-a.facing*20,y:FLOOR-f.y-110,life:.22,color:f.block?'#b1d2da':'#ffe1a0'});
   if(f.hp===0&&this.mode!=='training')this.endRound(owner);else if(this.mode==='training'&&f.hp<5){f.hp=100;this.emit('training-reset',{})}
  }
- endRound(winner){if(this.state!=='fight')return;this.winner=winner;if(winner!==null)this.wins[winner]++;this.projectiles=[];this.pendingArea=null;
+ endRound(winner){if(this.state!=='fight')return;this.winner=winner;for(const f of this.fighters){f.attackTime=0;f.block=false;f.vx=0;f.stun=0}if(winner!==null){this.wins[winner]++;this.fighters[1-winner].defeated=true;}this.projectiles=[];this.pendingArea=null;
   if(winner!==null&&this.wins[winner]>=2){this.state='finish';this.stateTime=7;this.sequence=[];this.emit('finish',{winner})}else{this.state='roundover';this.stateTime=2.5;this.emit('roundover',{winner})}
  }
- finishKey(index,key){if(this.state!=='finish'||index!==this.winner)return false;const expected=['down','forward','down','fatal'];if(key===expected[this.sequence.length])this.sequence.push(key);else this.sequence=key==='down'?['down']:[];this.emit('sequence',{length:this.sequence.length});if(this.sequence.length===4){this.state='fatal';this.stateTime=3.6;this.emit('fatal',{winner:index});return true}return false}
+ finishKey(index,key){if(this.state!=='finish'||index!==this.winner)return false;const expected=['down','forward','down','fatal'];if(key===expected[this.sequence.length])this.sequence.push(key);else this.sequence=key==='down'?['down']:[];this.emit('sequence',{length:this.sequence.length});if(this.sequence.length===4){this.state='fatal';this.fatalBeat=-1;this.stateTime=FINISHER_DURATION;this.emit('fatal',{winner:index});return true}return false}
  update(dt,inputs=[{},{}]){dt=Math.min(dt,.04);this.time+=dt;this.effects.forEach(e=>{e.life-=dt;if(e.type==='impact'){e.x+=e.vx*dt;e.y+=e.vy*dt;e.vy+=680*dt}});this.effects=this.effects.filter(e=>e.life>0);
   if(this.state!=='fight'){
-   for(const f of this.fighters){if(this.state==='roundover'||this.state==='finish')stepVertical(f,dt,1500,speed=>this.emit('land',{index:f.index,speed}));stepMotion(f,dt,this.state)}if(this.state==='result')return;this.stateTime-=dt;
-   if(this.state==='finish'&&this.mode==='cpu'&&this.winner===1&&this.stateTime<4.5){this.state='fatal';this.stateTime=3.6;this.emit('fatal',{winner:1})}
-   if(this.state==='fatal'){const loser=this.fighters[1-this.winner];loser.y+=dt*175;loser.x+=dt*75*loser.facing*-1;loser.dead=true;this.effects.push({type:'pixel',x:loser.x+(this.random()-.5)*110,y:FLOOR-loser.y-80,life:.8,color:loser.data.color})}
+   for(const f of this.fighters){if(['roundover','finish','fatal','result'].includes(this.state))stepVertical(f,dt,1500,speed=>this.emit('land',{index:f.index,speed}));stepMotion(f,dt,this.state)}if(this.state==='result')return;this.stateTime-=dt;
+   if(this.state==='finish'&&this.mode==='cpu'&&this.winner===1&&this.stateTime<4.5){this.state='fatal';this.fatalBeat=-1;this.stateTime=FINISHER_DURATION;this.emit('fatal',{winner:1})}
+
+   if(this.state==='fatal'){const beat=finisherBeat(1-this.stateTime/FINISHER_DURATION);if(beat!==this.fatalBeat){this.fatalBeat=beat;this.emit('finisher-cue',{phase:beat})}}
    if(this.stateTime<=0){if(this.state==='intro'){this.state='fight';this.say(0,true);this.emit('fight',{})}else if(this.state==='roundover'){this.round++;this.newRound()}else if(this.state==='finish'||this.state==='fatal'){this.state='result';this.emit('result',{winner:this.winner})}}
    return;
   }
