@@ -1,4 +1,4 @@
-import {createMotion,stepMotion,addInjury,approach,resolveBodies} from './physics.js';
+import {createMotion,stepMotion,addInjury,approach,resolveBodies,stepVertical} from './physics.js';
 export const FLOOR=510;
 const clamp=(v,a,b)=>Math.max(a,Math.min(v,b));
 export class Match{
@@ -26,7 +26,7 @@ export class Match{
  finishKey(index,key){if(this.state!=='finish'||index!==this.winner)return false;const expected=['down','forward','down','fatal'];if(key===expected[this.sequence.length])this.sequence.push(key);else this.sequence=key==='down'?['down']:[];this.emit('sequence',{length:this.sequence.length});if(this.sequence.length===4){this.state='fatal';this.stateTime=3.6;this.emit('fatal',{winner:index});return true}return false}
  update(dt,inputs=[{},{}]){dt=Math.min(dt,.04);this.time+=dt;this.effects.forEach(e=>{e.life-=dt;if(e.type==='impact'){e.x+=e.vx*dt;e.y+=e.vy*dt;e.vy+=680*dt}});this.effects=this.effects.filter(e=>e.life>0);
   if(this.state!=='fight'){
-   for(const f of this.fighters)stepMotion(f,dt,this.state);if(this.state==='result')return;this.stateTime-=dt;
+   for(const f of this.fighters){if(this.state==='roundover'||this.state==='finish')stepVertical(f,dt,1500,speed=>this.emit('land',{index:f.index,speed}));stepMotion(f,dt,this.state)}if(this.state==='result')return;this.stateTime-=dt;
    if(this.state==='finish'&&this.mode==='cpu'&&this.winner===1&&this.stateTime<4.5){this.state='fatal';this.stateTime=3.6;this.emit('fatal',{winner:1})}
    if(this.state==='fatal'){const loser=this.fighters[1-this.winner];loser.y+=dt*175;loser.x+=dt*75*loser.facing*-1;loser.dead=true;this.effects.push({type:'pixel',x:loser.x+(this.random()-.5)*110,y:FLOOR-loser.y-80,life:.8,color:loser.data.color})}
    if(this.stateTime<=0){if(this.state==='intro'){this.state='fight';this.say(0,true);this.emit('fight',{})}else if(this.state==='roundover'){this.round++;this.newRound()}else if(this.state==='finish'||this.state==='fatal'){this.state='result';this.emit('result',{winner:this.winner})}}
@@ -37,7 +37,7 @@ export class Match{
   for(const f of this.fighters){const opponent=this.fighters[1-f.index],input=inputs[f.index]||{};if(Math.abs(opponent.x-f.x)>30)f.facing=opponent.x>=f.x?1:-1;f.stun=Math.max(0,f.stun-dt);f.cooldown=Math.max(0,f.cooldown-dt);f.attackTime=Math.max(0,f.attackTime-dt);f.shield=Math.max(0,f.shield-dt);f.invulnerable=Math.max(0,f.invulnerable-dt);f.comboClock-=dt;if(f.comboClock<=0)f.combo=0;f.block=!!input.down&&f.y===0&&!f.attackTime&&!f.stun;
    if(f.dash>0){f.dash-=dt}else if(!f.stun){const desired=!f.block&&!f.attackTime?((input.right?1:0)-(input.left?1:0))*(160+f.data.speed*22):0;f.vx=approach(f.vx,desired,f.y>0?3.4:desired?13:17,dt)}else f.vx=approach(f.vx,0,f.y>0?1.2:5,dt);
    if(input.jump&&f.y===0&&!f.stun&&!f.block){f.vy=590;f.y=.1;this.emit('jump',{index:f.index})}
-   if(f.y>0||f.vy>0){f.y+=f.vy*dt;f.vy-=1500*dt;if(f.y<0){f.motion.landing=Math.min(1,Math.abs(f.vy)/700);f.motion.hairV+=f.vy*.002;f.motion.clothV+=f.vy*.001;this.emit('land',{index:f.index,speed:Math.abs(f.vy)});f.y=0;f.vy=0}}
+   stepVertical(f,dt,1500,speed=>this.emit('land',{index:f.index,speed}));
    f.x=clamp(f.x+f.vx*dt,120,1160);
    if(f.attackTime>0&&!f.attackHit){const kind=f.attackKind,type=f.data.type,range=kind==='kick'?145:kind==='special'?(type==='dash'?150:type==='uppercut'?120:0):112;
     if(range&&Math.abs(f.x-opponent.x)<range&&Math.abs(f.y-opponent.y)<(type==='uppercut'?210:115)){f.attackHit=true;this.damage(opponent.index,(kind==='special'?14:kind==='kick'?8:5)+f.data.power*.75,f.index)}}
